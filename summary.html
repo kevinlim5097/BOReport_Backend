@@ -93,6 +93,11 @@ Closing Person: ${data.closingPerson}
         document.getElementById("status").textContent = "✅ " + response.message;
         console.log("Server response:", response);
       })
+      .then(data => {
+        console.log("Success:", data);
+        // 提交成功后跳回 index.html
+        window.location.href = "index.html";
+      })
       .catch(err => {
         document.getElementById("status").textContent = "❌ Error: " + err;
         console.error("Error:", err);
