@@ -11,20 +11,34 @@
     .section { margin-bottom: 20px; }
     .section-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #0077cc; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
     .item { margin: 4px 0; }
-    #shareBtn { background: #25D366; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    .button-group { display: flex; gap: 10px; margin-top: 15px; }
+    .button-group button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+    }
+    #shareBtn { background: #25D366; } /* WhatsApp 绿色 */
+    #backBtn { background: #0077cc; }  /* Back 蓝色 */
     #status { margin-top: 10px; font-size: 14px; }
   </style>
   <link rel="manifest" href="/manifest.json">
   <script>
-  if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js');
-  }
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js');
+    }
   </script>
 </head>
 <body>
   <h1>Summary Report</h1>
   <div class="summary-container" id="summary"></div>
-  <button id="shareBtn">📤 Share via WhatsApp</button>
+  <div class="button-group">
+    <button id="shareBtn">WhatsApp</button>
+    <button id="backBtn">Back</button>
+  </div>
   <div id="status"></div>
 
   <script>
@@ -83,13 +97,12 @@ Closing Person: ${data.closingPerson}
     `;
     document.getElementById("summary").innerHTML = htmlContent;
 
+    // WhatsApp 分享 + 提交数据
     document.getElementById("shareBtn").onclick = () => {
-      // 1. WhatsApp 分享
       const url = `https://wa.me/?text=${encodeURIComponent(summaryText)}`;
       window.open(url, "_blank");
 
-      // 2. 发送到 Flask → Telegram + Google Sheets
-      fetch("https://boreport-backend.onrender.com/submit-report", {  // 部署后改成你的 Render URL
+      fetch("https://boreport-backend.onrender.com/submit-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data, summaryText })
@@ -99,15 +112,15 @@ Closing Person: ${data.closingPerson}
         document.getElementById("status").textContent = "✅ " + response.message;
         console.log("Server response:", response);
       })
-      .then(data => {
-        console.log("Success:", data);
-        // 提交成功后跳回
-        window.location.href = "/";
-      })
       .catch(err => {
         document.getElementById("status").textContent = "❌ Error: " + err;
         console.error("Error:", err);
       });
+    };
+
+    // 返回首页
+    document.getElementById("backBtn").onclick = () => {
+      window.location.href = "/";
     };
   </script>
 </body>
