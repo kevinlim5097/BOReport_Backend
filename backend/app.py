@@ -1,50 +1,62 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
-import os
-import json
 import requests
 import gspread
 from google.oauth2.service_account import Credentials
+import os
+import json
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__)
 CORS(app)
 
-# === Telegram 配置 ===
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "your-local-token")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "your-local-chat-id")
+# === Telegram 配置（从环境变量读取，若无则写死测试用值）===
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "your-telegram-bot-token")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "your-telegram-chat-id")
 
 # === Google Sheets 配置 ===
 SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME", "Daily Reports")
+
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
 
-# === 自动切换 Google 认证模式 ===
-if os.getenv("GOOGLE_CREDS_JSON"):  # Render 模式
-    print("Using GOOGLE_CREDS_JSON from environment")
-    google_creds = json.loads(os.getenv("GOOGLE_CREDS_JSON"))
+# === Google 凭证：自动切换模式 ===
+if os.getenv("GOOGLE_CREDENTIALS_JSON"):
+    google_creds = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+    # 自动修复 private_key
+    if "\\n" in google_creds["private_key"]:
+        google_creds["private_key"] = google_creds["private_key"].replace("\\n", "\n")
     creds = Credentials.from_service_account_info(google_creds, scopes=SCOPES)
-else:  # 本地模式
-    print("Using backend/service_account.json from local file")
+else:
     creds = Credentials.from_service_account_file('backend/service_account.json', scopes=SCOPES)
 
-# === 初始化 Google Sheets 客户端 ===
+# === 连接 Google Sheets ===
 gs_client = gspread.authorize(creds)
-sheet = gs_client.open(SPREADSHEET_NAME).sheet1
+sheet = gs_client.open(SPREADSHEET_NAME).sheet1  # 使用第一个工作表
 
-# === 前端页面 ===
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
 
 @app.route("/summary")
 def summary():
     return render_template("summary.html")
 
-# === 提交报告接口 ===
+# PWA 需要的 manifest 和 service worker
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static', 'service-worker.js')
+
 @app.route("/submit-report", methods=["POST"])
 def submit_report():
+    print("=== 收到请求 ===")
+    print(request.json)
+
     payload = request.json
     data = payload.get("data")
     summary_text = payload.get("summaryText")
@@ -52,11 +64,14 @@ def submit_report():
     if not data or not summary_text:
         return jsonify({"error": "Invalid payload"}), 400
 
-    # 1. 发送到 Telegram
-    telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    requests.post(telegram_url, json={"chat_id": TELEGRAM_CHAT_ID, "text": summary_text})
+    # === 1. 发送到 Telegram ===
+    try:
+        telegram_url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+        requests.post(telegram_url, json={"chat_id": TELEGRAM_CHAT_ID, "text": summary_text})
+    except Exception as e:
+        return jsonify({"error": f"Failed to send Telegram message: {str(e)}"}), 500
 
-    # 2. 写入 Google Sheets
+    # === 2. 写入 Google Sheets ===
     try:
         sheet.append_row([
             data.get("location"),
@@ -78,6 +93,10 @@ def submit_report():
         return jsonify({"error": f"Failed to write to Google Sheets: {str(e)}"}), 500
 
     return jsonify({"status": "ok", "message": "Report sent to Telegram & Google Sheets"})
+
+@app.route("/health")
+def health():
+    return "Flask backend is running!"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
