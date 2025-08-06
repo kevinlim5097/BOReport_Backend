@@ -83,7 +83,7 @@ Closing Person: ${data.closingPerson}
       window.open(url, "_blank");
 
       // 2. 发送到 Flask → Telegram + Google Sheets
-      fetch("http://127.0.0.1:5000/submit-report", {  // 部署后改成你的 Render URL
+      fetch("https://boreport-backend.onrender.com/submit-report", {  // 部署后改成你的 Render URL
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ data, summaryText })
