@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Sales Form</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f2f2f2; }
+    h1 { text-align: center; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .form-group { display: flex; flex-wrap: wrap; margin-bottom: 10px; gap: 10px; }
+    .form-group label { flex: 1 0 48%; font-weight: bold; }
+    .form-group input { flex: 1 0 48%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .section-title { font-size: 16px; margin-top: 20px; color: #0077cc; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+    button { width: 100%; padding: 12px; background-color: #0077cc; color: white; border: none; border-radius: 5px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Daily Sales Entry</h1>
+  <div class="container">
+    <form onsubmit="handleSubmit(event)">
+      <div class="section-title">1️⃣ Details</div>
+      <div class="form-group">
+        <label>Location</label><input type="text" id="location" required />
+        <label>Date</label><input type="date" id="date" required />
+        <label>Closing Person</label><input type="text" id="closingPerson" />
+      </div>
+      <div class="section-title">2️⃣ Sales & Settlement</div>
+      <div class="form-group">
+        <label>Sales</label><input type="number" step="0.01" id="sales" />
+        <label>Credit</label><input type="number" step="0.01" id="credit" />
+        <label>Debit</label><input type="number" step="0.01" id="debit" />
+        <label>TNG</label><input type="number" step="0.01" id="tng" />
+        <label>Bank ATM</label><input type="number" step="0.01" id="bankAtm" />
+        <label>Cash</label><input type="number" step="0.01" id="cash" />
+      </div>
+      <div class="section-title">3️⃣ Sell & Wastage</div>
+      <div class="form-group">
+        <label>Bread Sell</label><input type="number" id="breadSell" />
+        <label>Bread Left</label><input type="number" id="breadLeft" />
+        <label>Bread Left (12pm)</label><input type="number" id="breadLeftCollected" />
+        <label>Egg Tart</label><input type="number" id="eggTart" />
+      </div>
+      <div class="section-title">4️⃣ Cake Selling Volume</div>
+      <div class="form-group">
+        <label>Birthday Cake</label><input type="number" id="birthdayCake" />
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("date").valueAsDate = new Date();
+    function handleSubmit(event) {
+      event.preventDefault();
+      const data = {
+        location: document.getElementById("location").value,
+        date: document.getElementById("date").value,
+        closingPerson: document.getElementById("closingPerson").value,
+        sales: parseFloat(document.getElementById("sales").value || 0).toFixed(2),
+        credit: parseFloat(document.getElementById("credit").value || 0).toFixed(2),
+        debit: parseFloat(document.getElementById("debit").value || 0).toFixed(2),
+        tng: parseFloat(document.getElementById("tng").value || 0).toFixed(2),
+        bankAtm: parseFloat(document.getElementById("bankAtm").value || 0).toFixed(2),
+        cash: parseFloat(document.getElementById("cash").value || 0).toFixed(2),
+        breadSell: document.getElementById("breadSell").value,
+        breadLeft: document.getElementById("breadLeft").value,
+        breadLeftCollected: document.getElementById("breadLeftCollected").value,
+        eggTart: document.getElementById("eggTart").value,
+        birthdayCake: document.getElementById("birthdayCake").value
+      };
+      sessionStorage.setItem("salesData", JSON.stringify(data));
+      window.location.href = "summary.html";
+    }
+  </script>
+</body>
+</html>

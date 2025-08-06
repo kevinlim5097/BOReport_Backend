@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Summary Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #fff; }
+    h1 { text-align: center; }
+    .summary-container { max-width: 600px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #0077cc; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+    .item { margin: 4px 0; }
+    #shareBtn { background: #25D366; color: white; padding: 12px; width: 100%; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    #status { margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Summary Report</h1>
+  <div class="summary-container" id="summary"></div>
+  <button id="shareBtn">📤 Share via WhatsApp</button>
+  <div id="status"></div>
+
+  <script>
+    const data = JSON.parse(sessionStorage.getItem("salesData") || "{}");
+
+    const summaryText = `
+Location: ${data.location}
+Date: ${data.date}
+Closing Person: ${data.closingPerson}
+
+[Sales & Settlement]
+- Sales: ${data.sales}
+- Credit: ${data.credit}
+- Debit: ${data.debit}
+- TNG: ${data.tng}
+- Bank ATM: ${data.bankAtm}
+- Cash: ${data.cash}
+
+[Sell & Wastage]
+- Bread Sell: ${data.breadSell}
+- Bread Left: ${data.breadLeft}
+- Bread Left (12pm): ${data.breadLeftCollected}
+- Egg Tart: ${data.eggTart}
+
+[Cake Selling Volume]
+- Birthday Cake: ${data.birthdayCake}
+`.trim();
+
+    const htmlContent = `
+      <div class="section">
+        <div class="section-title">Details</div>
+        <div class="item">Location: ${data.location}</div>
+        <div class="item">Date: ${data.date}</div>
+        <div class="item">Closing Person: ${data.closingPerson}</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Sales & Settlement</div>
+        <div class="item">Sales: ${data.sales}</div>
+        <div class="item">Credit: ${data.credit}</div>
+        <div class="item">Debit: ${data.debit}</div>
+        <div class="item">TNG: ${data.tng}</div>
+        <div class="item">Bank ATM: ${data.bankAtm}</div>
+        <div class="item">Cash: ${data.cash}</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Sell & Wastage</div>
+        <div class="item">Bread Sell: ${data.breadSell}</div>
+        <div class="item">Bread Left: ${data.breadLeft}</div>
+        <div class="item">Bread Left (12pm): ${data.breadLeftCollected}</div>
+        <div class="item">Egg Tart: ${data.eggTart}</div>
+      </div>
+      <div class="section">
+        <div class="section-title">Cake Selling Volume</div>
+        <div class="item">Birthday Cake: ${data.birthdayCake}</div>
+      </div>
+    `;
+    document.getElementById("summary").innerHTML = htmlContent;
+
+    document.getElementById("shareBtn").onclick = () => {
+      // 1. WhatsApp 分享
+      const url = `https://wa.me/?text=${encodeURIComponent(summaryText)}`;
+      window.open(url, "_blank");
+
+      // 2. 发送到 Flask → Telegram + Google Sheets
+      fetch("http://127.0.0.1:5000/submit-report", {  // 部署后改成你的 Render URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data, summaryText })
+      })
+      .then(res => res.json())
+      .then(response => {
+        document.getElementById("status").textContent = "✅ " + response.message;
+        console.log("Server response:", response);
+      })
+      .catch(err => {
+        document.getElementById("status").textContent = "❌ Error: " + err;
+        console.error("Error:", err);
+      });
+    };
+  </script>
+</body>
+</html>

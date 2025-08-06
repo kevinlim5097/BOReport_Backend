@@ -1,0 +1,6 @@
+Flask
+flask-cors
+requests
+gspread
+google-auth
+python-dotenv
