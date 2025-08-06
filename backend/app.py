@@ -23,11 +23,12 @@ SCOPES = [
 
 # === Google 凭证：自动切换模式 ===
 if os.getenv("GOOGLE_CREDENTIALS_JSON"):
-    # 云端模式：从环境变量读取
     google_creds = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+    # 自动修复 private_key
+    if "\\n" in google_creds["private_key"]:
+        google_creds["private_key"] = google_creds["private_key"].replace("\\n", "\n")
     creds = Credentials.from_service_account_info(google_creds, scopes=SCOPES)
 else:
-    # 本地模式：直接读取文件
     creds = Credentials.from_service_account_file('backend/service_account.json', scopes=SCOPES)
 
 # === 连接 Google Sheets ===
