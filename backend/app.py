@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from flask_cors import CORS
 import requests
 import gspread
@@ -34,6 +34,23 @@ else:
 # === 连接 Google Sheets ===
 gs_client = gspread.authorize(creds)
 sheet = gs_client.open(SPREADSHEET_NAME).sheet1  # 使用第一个工作表
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/summary")
+def summary():
+    return render_template("summary.html")
+
+# PWA 需要的 manifest 和 service worker
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static', 'service-worker.js')
 
 @app.route("/submit-report", methods=["POST"])
 def submit_report():
