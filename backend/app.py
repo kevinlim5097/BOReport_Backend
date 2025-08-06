@@ -10,8 +10,8 @@ app = Flask(__name__, template_folder="templates")
 CORS(app)
 
 # === Telegram 配置 ===
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "7523419362:AAH5Rc5XeS8M3SczGSVo6LFqgaTFeLC3O7o")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "-4820673163")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "your-local-token")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "your-local-chat-id")
 
 # === Google Sheets 配置 ===
 SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME", "Daily Reports")
@@ -20,13 +20,16 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-# === Google 认证（本地用文件，Render 用环境变量）===
+# === 自动切换 Google 认证模式 ===
 if os.getenv("GOOGLE_CREDS_JSON"):  # Render 模式
+    print("Using GOOGLE_CREDS_JSON from environment")
     google_creds = json.loads(os.getenv("GOOGLE_CREDS_JSON"))
     creds = Credentials.from_service_account_info(google_creds, scopes=SCOPES)
 else:  # 本地模式
+    print("Using backend/service_account.json from local file")
     creds = Credentials.from_service_account_file('backend/service_account.json', scopes=SCOPES)
 
+# === 初始化 Google Sheets 客户端 ===
 gs_client = gspread.authorize(creds)
 sheet = gs_client.open(SPREADSHEET_NAME).sheet1
 
