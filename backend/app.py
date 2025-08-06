@@ -39,7 +39,7 @@ sheet = gs_client.open(SPREADSHEET_NAME).sheet1  # 使用第一个工作表
 def home():
     return render_template("index.html")
 
-@app.route("/summary")
+@app.route("/summary.html")
 def summary():
     return render_template("summary.html")
 
